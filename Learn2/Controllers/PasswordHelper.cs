@@ -21,7 +21,7 @@ namespace Learn2.Controllers {
             StringBuilder res = new StringBuilder();
             Random rnd = new Random();
             for(int i = 0; i < 16; i++) {
-                res.Append(rnd.Next(valid.Length));
+                res.Append(valid[rnd.Next(valid.Length)]);
             }
             return res.ToString();
         }

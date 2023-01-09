@@ -16,19 +16,19 @@ namespace Learn2.Controllers {
         }
 
         [HttpPost(Name = "CreateItem")]
-        public IActionResult Create([FromQuery] string name,[FromQuery] decimal price, [FromQuery] string apiKey) {
+        public IActionResult Create(ItemModal itemModal) {
             try {
 
-                if (!this.Context.UserInfos.Any(x => x.ApiKey.Equals(apiKey))) {
+                if (!this.Context.UserInfos.Any(x => x.ApiKey.Equals(itemModal.ApiKey))) {
                     return StatusCode(404);
                 }
 
-                if (price <= 0) {
+                if (itemModal.Price <= 0) {
                     return StatusCode(406);
                 }
 
                 
-                this.Context.ShopItems.Add(new ShopItem() { Name = name, Price = price, UserId= this.Context.UserInfos.First(x => x.ApiKey.Equals(apiKey)).Id });
+                this.Context.ShopItems.Add(new ShopItem() { Name = itemModal.Name, Price = itemModal.Price, UserId= this.Context.UserInfos.First(x => x.ApiKey.Equals(itemModal.ApiKey)).Id });
                 this.Context.SaveChanges();
 
                 return Ok();

@@ -17,6 +17,9 @@ namespace Learn2.Controllers {
 
         [HttpGet(Name = "Login")]
         public IActionResult Login(string login, string password) {
+
+            login = login.Trim();
+            password = password.Trim();
             Regex validateNameRegex = new Regex("([a-z]|[A-Z]){3,10}");
             if (!validateNameRegex.IsMatch(password)) {
                 return StatusCode(403);
@@ -41,6 +44,8 @@ namespace Learn2.Controllers {
 
         [HttpGet(Name = "Register")]
         public IActionResult Register(string login, string password) {
+            login = login.Trim();
+            password = password.Trim();
             Regex validateNameRegex = new Regex("([a-z]|[A-Z]){3,10}");
             if(!validateNameRegex.IsMatch(password)) {
                 return StatusCode(403);
