@@ -1,5 +1,9 @@
 ﻿using Learn2.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
@@ -33,7 +37,20 @@ namespace Learn2.Controllers {
             try {
                 UserInfo user = this.context.UserInfos.First(x => x.Name.Equals(login));
                 if (user.Password.Equals(PasswordHelper.HashPassword(password))) {
-                    return Ok(user.ApiKey);
+
+                    var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(ConfigManager.AppSetting["JWT:Secret"]));
+                    var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
+                    var tokeOptions = new JwtSecurityToken(issuer: ConfigManager.AppSetting["JWT:ValidIssuer"],
+                        audience: ConfigManager.AppSetting["JWT:ValidAudience"],
+                        claims: new List<Claim>(),
+                        expires: DateTime.Now.AddMinutes(6),
+                        signingCredentials: signinCredentials);
+                    var tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
+                    this.context.UserInfos.Add(new UserInfo { Name = login, Password = PasswordHelper.HashPassword(password), ApiKey = tokenString });
+                    this.context.SaveChanges();
+                    return Ok(new JWTTokenResponse {
+                        Token = tokenString
+                    });
                 }
 
             } catch (Exception ex) {
@@ -47,7 +64,7 @@ namespace Learn2.Controllers {
             login = login.Trim();
             password = password.Trim();
             Regex validateNameRegex = new Regex("([a-z]|[A-Z]){3,10}");
-            if(!validateNameRegex.IsMatch(password)) {
+            if (!validateNameRegex.IsMatch(password)) {
                 return StatusCode(403);
             }
 
@@ -61,11 +78,21 @@ namespace Learn2.Controllers {
                 return StatusCode(403);
             }
 
-            try {
-                this.context.UserInfos.Add(new UserInfo { Name = login, Password = PasswordHelper.HashPassword(password), ApiKey = PasswordHelper.generateAPIKey() });
+            try { 
+                var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(ConfigManager.AppSetting["JWT:Secret"]));
+                var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
+                var tokeOptions = new JwtSecurityToken(issuer: ConfigManager.AppSetting["JWT:ValidIssuer"],
+                    audience: ConfigManager.AppSetting["JWT:ValidAudience"],
+                    claims: new List<Claim>(),
+                    expires: DateTime.Now.AddMinutes(6),
+                    signingCredentials: signinCredentials);
+                var tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
+                this.context.UserInfos.Add(new UserInfo { Name = login, Password = PasswordHelper.HashPassword(password), ApiKey = tokenString });
                 this.context.SaveChanges();
-                return Ok();
-            }catch(Exception ex) {
+                return Ok(new JWTTokenResponse {
+                    Token = tokenString
+                });
+            } catch (Exception ex) {
                 return StatusCode(500);
             }
         }

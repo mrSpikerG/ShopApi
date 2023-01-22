@@ -1,10 +1,13 @@
 ﻿using Learn2.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Learn2.Controllers {
 
-    [ApiController]
     [Route("[controller]/[action]")]
+    [Authorize]
+    [ApiController]
     public class CategoryController : Controller {
 
 

@@ -1,8 +1,10 @@
 using Learn2.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Learn2.Controllers {
+    [Authorize]
     [ApiController]
     [Route("[controller]/[action]")]
     public class ShopController : ControllerBase {

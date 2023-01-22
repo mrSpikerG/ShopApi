@@ -27,7 +27,8 @@ namespace Learn2.Controllers
             if (!optionsBuilder.IsConfigured)
             {
              //   optionsBuilder.UseSqlServer("Data Source=DESKTOP-2I5L44I\\SQLEXPRESS;Initial Catalog=SHOP;Integrated Security=SSPI");
-                optionsBuilder.UseSqlServer("Data Source=SQL5063.site4now.net;Initial Catalog=db_a9219e_shop;User Id=db_a9219e_shop_admin;Password=LF721)$lrF9]_");
+               // optionsBuilder.UseSqlServer("Data Source=SQL5063.site4now.net;Initial Catalog=db_a9219e_shop;User Id=db_a9219e_shop_admin;Password=LF721)$lrF9]_");
+                optionsBuilder.UseSqlServer(ConfigManager.AppSetting["ConnectionStrings:DefaultConnection"]);
             }
         }
 

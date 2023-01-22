@@ -1,10 +1,11 @@
 ﻿using Learn2.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Learn2.Controllers {
 
-
+    [Authorize]
     [ApiController]
     [Route("[controller]/[action]")]
     public class CategoryConnectionController : Controller {
