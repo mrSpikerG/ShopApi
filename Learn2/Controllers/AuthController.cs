@@ -43,10 +43,10 @@ namespace Learn2.Controllers {
                     var tokeOptions = new JwtSecurityToken(issuer: ConfigManager.AppSetting["JWT:ValidIssuer"],
                         audience: ConfigManager.AppSetting["JWT:ValidAudience"],
                         claims: new List<Claim>(),
-                        expires: DateTime.Now.AddMinutes(6),
+                        expires: DateTime.Now.AddDays(1),
                         signingCredentials: signinCredentials);
                     var tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
-                    this.context.UserInfos.Add(new UserInfo { Name = login, Password = PasswordHelper.HashPassword(password), ApiKey = tokenString });
+                    this.context.UserInfos.First(x => x.Name == login).ApiKey = tokenString;
                     this.context.SaveChanges();
                     return Ok(new JWTTokenResponse {
                         Token = tokenString
@@ -54,7 +54,7 @@ namespace Learn2.Controllers {
                 }
 
             } catch (Exception ex) {
-                return StatusCode(404);
+                return StatusCode(500);
             }
             return StatusCode(500);
         }
@@ -84,7 +84,7 @@ namespace Learn2.Controllers {
                 var tokeOptions = new JwtSecurityToken(issuer: ConfigManager.AppSetting["JWT:ValidIssuer"],
                     audience: ConfigManager.AppSetting["JWT:ValidAudience"],
                     claims: new List<Claim>(),
-                    expires: DateTime.Now.AddMinutes(6),
+                    expires: DateTime.Now.AddDays(1),
                     signingCredentials: signinCredentials);
                 var tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
                 this.context.UserInfos.Add(new UserInfo { Name = login, Password = PasswordHelper.HashPassword(password), ApiKey = tokenString });

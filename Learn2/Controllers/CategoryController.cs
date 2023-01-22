@@ -1,7 +1,9 @@
-﻿using Learn2.Models;
+﻿using Learn2.Cache;
+using Learn2.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Learn2.Controllers {
 
@@ -10,10 +12,11 @@ namespace Learn2.Controllers {
     [ApiController]
     public class CategoryController : Controller {
 
-
+        private readonly ICacheService CacheService;
         private readonly SHOPContext Context;
-        public CategoryController() {
+        public CategoryController(ICacheService cacheService) {
             this.Context = new SHOPContext();
+            this.CacheService = cacheService;
         }
 
         [HttpPost(Name = "CreateCategory")]
@@ -28,10 +31,23 @@ namespace Learn2.Controllers {
             }
         }
 
+       
+
         [HttpGet(Name = "ReadCategory")]
-        public IEnumerable<Category> ReadCategory() {
-            return this.Context.Categories;
+        public async Task<ActionResult<IEnumerable<Category>>> ReadCategory() {
+
+            List<Category> Cache = this.CacheService.GetData<List<Category>>("ShopItem");
+            if (Cache == null) {
+                var productSQL = await this.Context.Categories.ToListAsync();
+                if (productSQL.Count > 0) {
+                    this.CacheService.SetData("Product", productSQL, DateTimeOffset.Now.AddDays(1));
+                    return productSQL;
+                }
+            }
+            return Cache;
         }
+
+
 
         [HttpPost(Name = "UpdateCategory")]
         public IActionResult UpdateCategory([FromQuery] int id, [FromQuery] string newName) {

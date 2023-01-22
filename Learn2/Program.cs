@@ -1,4 +1,5 @@
 using Learn2;
+using Learn2.Cache;
 using Learn2.Controllers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -48,7 +49,7 @@ builder.Services.AddSwaggerGen(options => {
 builder.Services.AddDbContext<SHOPContext>();
 
 //          CacheService
-//builder.Services.AddScoped<ICacheService, CacheService>();
+builder.Services.AddScoped<ICacheService, CacheService>();
 // ...
 
 builder.Services.AddAuthentication(opt => {

@@ -1,7 +1,9 @@
-﻿using Learn2.Models;
+﻿using Learn2.Cache;
+using Learn2.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Learn2.Controllers {
 
@@ -9,9 +11,13 @@ namespace Learn2.Controllers {
     [ApiController]
     [Route("[controller]/[action]")]
     public class CategoryConnectionController : Controller {
+        
         private readonly SHOPContext Context;
-        public CategoryConnectionController() {
+        private readonly ICacheService CacheService;
+
+        public CategoryConnectionController(ICacheService cacheService) {
             this.Context = new SHOPContext();
+            this.CacheService = cacheService;
         }
 
         [HttpPost(Name = "AddItemToCategory")]
@@ -25,10 +31,21 @@ namespace Learn2.Controllers {
             return Ok();
         }
 
+      
         [HttpGet(Name = "ReadCategoryConn")]
-        public IEnumerable<CategoryConnection> ReadCategory() {
-            return this.Context.CategoryConnections;
+        public async Task<ActionResult<IEnumerable<CategoryConnection>>> ReadCategory() {
+
+            List<CategoryConnection> Cache = this.CacheService.GetData<List<CategoryConnection>>("ShopItem");
+            if (Cache == null) {
+                var productSQL = await this.Context.CategoryConnections.ToListAsync();
+                if (productSQL.Count > 0) {
+                    this.CacheService.SetData("Product", productSQL, DateTimeOffset.Now.AddDays(1));
+                    return productSQL;
+                }
+            }
+            return Cache;
         }
+
 
         [HttpPost(Name = "RemoveItemToCategory")]
         public IActionResult RemoveConnection(int id) {

@@ -1,3 +1,4 @@
+using Learn2.Cache;
 using Learn2.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,12 +10,13 @@ namespace Learn2.Controllers {
     [Route("[controller]/[action]")]
     public class ShopController : ControllerBase {
 
-
+        private readonly ICacheService CacheService;
         private readonly SHOPContext Context;
 
 
-        public ShopController() {
+        public ShopController(ICacheService cacheService) {
             this.Context = new SHOPContext();
+            this.CacheService = cacheService;
         }
 
         [HttpPost(Name = "CreateItem")]
@@ -41,28 +43,33 @@ namespace Learn2.Controllers {
         }
 
         [HttpGet(Name = "ReadItem")]
-        public IEnumerable<ShopItem> Read() {
-            return this.Context.ShopItems;
+        public async Task<ActionResult<IEnumerable<ShopItem>>> Read() {
+
+            List<ShopItem> productsCache = this.CacheService.GetData<List<ShopItem>>("ShopItem");
+            if (productsCache == null) {
+                var productSQL = await this.Context.ShopItems.ToListAsync();
+                if (productSQL.Count > 0) {
+                    this.CacheService.SetData("Product", productSQL, DateTimeOffset.Now.AddDays(1));
+                    return productSQL;
+                }
+            }
+            return productsCache;
         }
 
         [HttpPost(Name = "UpdateItem")]
-        public IActionResult Update([FromQuery] int id, [FromQuery] string newName, [FromQuery] decimal newPrice, [FromQuery] string apiKey) {
+        public IActionResult Update([FromQuery] int id, [FromQuery] string newName, [FromQuery] decimal newPrice) {
             if (!this.Context.ShopItems.Any(x => x.Id == id)) {
                 return StatusCode(404);
             }
 
-            if (!this.Context.UserInfos.Any(x => x.ApiKey.Equals(apiKey))) {
-                return StatusCode(404);
-            }
+   
 
             if (newPrice <= 0) {
                 return StatusCode(406);
             }
 
             ShopItem item = this.Context.ShopItems.First(x => x.Id == id);
-            if(!this.Context.UserInfos.First(x => x.Id == item.UserId).ApiKey.Equals(apiKey)) {
-                return StatusCode(403);
-            }
+         
 
             item.Name = newName;
             item.Price = newPrice;
@@ -71,21 +78,16 @@ namespace Learn2.Controllers {
         }
 
         [HttpPost(Name = "DeleteItem")]
-        public IActionResult Delete([FromQuery]int id, [FromQuery] string apiKey) {
+        public IActionResult Delete([FromQuery]int id) {
 
-            if (!this.Context.UserInfos.Any(x => x.ApiKey.Equals(apiKey))) {
-                return StatusCode(404);
-            }
+            
 
             if (!this.Context.ShopItems.Any(x => x.Id==id)) {
                 return StatusCode(404);
             }
 
             ShopItem item = this.Context.ShopItems.First(x => x.Id == id);
-            if (!this.Context.UserInfos.First(x => x.Id == item.UserId).ApiKey.Equals(apiKey)) {
-                return StatusCode(403);
-            }
-
+            
             this.Context.Remove(item);
             this.Context.SaveChanges();
             return Ok();
